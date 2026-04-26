@@ -305,7 +305,31 @@ class HybridRetriever:
         raw_docs += self._arxiv.fetch(query, top_k=5)
         raw_docs += self._news.fetch(query, top_k=5)
 
-        if not raw_docs:
+        import os
+        use_mock = os.getenv("USE_MOCK_LLM", "false").lower() == "true"
+        if not raw_docs and use_mock:
+            logger.info("Mock mode enabled, injecting fake documents.")
+            raw_docs = [
+                RetrievedDocument(
+                    doc_id="mock_doc_1",
+                    url="https://mocksource.com/article1",
+                    title="Mock Supporting Article",
+                    snippet="This article provides strong supporting evidence for the claim with valid data.",
+                    source_domain="mocksource.com",
+                    published_date="2023-01-01",
+                    citation_count=50
+                ),
+                RetrievedDocument(
+                    doc_id="mock_doc_2",
+                    url="https://mocksource.com/article2",
+                    title="Mock Contradicting Article",
+                    snippet="This article contradicts the claim by showing flaws in the initial methodology.",
+                    source_domain="mocksource.com",
+                    published_date="2023-02-01",
+                    citation_count=20
+                )
+            ]
+        elif not raw_docs:
             logger.warning("No documents retrieved for claim %s", claim.claim_id)
             return RetrievalResult(claim_id=claim.claim_id, documents=[])
 
