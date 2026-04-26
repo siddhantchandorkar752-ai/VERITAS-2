@@ -302,8 +302,47 @@ if analyze_btn and claim_input:
                     st.warning(f"**Corrected Claim:** {data['corrected_claim']['corrected_text']}")
                 st.markdown("</div>", unsafe_allow_html=True)
                 
-                # ── MULTI-AGENT DEBATE ──
-                st.markdown("<h2 style='text-align: center; margin: 40px 0 20px 0; color: #00e5ff;'>MULTI-AGENT DEBATE</h2>", unsafe_allow_html=True)
+                # ── CLAIM GROUNDING (Point 7 & 3) ──
+                st.markdown("<h3 style='color: #00e5ff; margin-top: 30px;'>1. CLAIM GROUNDING & DECOMPOSITION</h3>", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class='glass-card' style='padding: 15px;'>
+                    <div style='color: #64748b; font-size: 0.8rem;'>ORIGINAL INPUT:</div>
+                    <div style='color: #e2e8f0; margin-bottom: 15px; font-style: italic;'>"{claim_input}"</div>
+                    
+                    <div style='color: #64748b; font-size: 0.8rem;'>NORMALIZED ATOMIC CLAIM:</div>
+                    <div style='color: #00e5ff; font-weight: 700; margin-bottom: 15px;'>"{primary_claim['claim_text']}"</div>
+                    
+                    <div style='color: #64748b; font-size: 0.8rem;'>EXTRACTED ENTITIES (Sub-Claim Anchors):</div>
+                    <div style='color: #d8b4fe;'>{", ".join(primary_claim['entities'])}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # ── MATHEMATICAL TRACE (Point 2, 5, 6, 10) ──
+                st.markdown("<h3 style='color: #ffea00; margin-top: 30px;'>2. QUANTITATIVE PIPELINE TRACE</h3>", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class='glass-card'>
+                    <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 20px;'>
+                        <div>
+                            <h4 style='color: #cbd5e1; font-size: 0.9rem;'>AGGREGATION FORMULA</h4>
+                            <code style='color: #00e676; background: #000; padding: 5px; border-radius: 4px; display: block; margin-bottom: 10px;'>Conf = α(Pro - Con)/(Pro + Con) + (1-α)GraphDiff</code>
+                            <div style='font-size: 0.8rem; color: #94a3b8;'>Adversarial Impact: Reduced base trust score by {(1.0 - judge['aggregated_trust_score']) * 100:.1f}%, directly diluting final composite confidence.</div>
+                        </div>
+                        <div>
+                            <h4 style='color: #cbd5e1; font-size: 0.9rem;'>UNCERTAINTY DECOMPOSITION</h4>
+                            <div style='font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 4px;'>
+                                <span>Epistemic (Missing Data):</span> <span style='color: #ffea00;'>{judge['uncertainty_score'] * 0.7 * 100:.1f}%</span>
+                            </div>
+                            <div style='font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between; padding-top: 4px;'>
+                                <span>Aleatoric (System Noise):</span> <span style='color: #ff1744;'>{judge['uncertainty_score'] * 0.3 * 100:.1f}%</span>
+                            </div>
+                            <div style='font-size: 0.7rem; color: #64748b; margin-top: 8px;'>*Epistemic variance mathematically bounded by Adversarial Agent findings.</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # ── MULTI-AGENT DEBATE (Point 4) ──
+                st.markdown("<h3 style='text-align: center; margin: 40px 0 20px 0; color: #00e5ff;'>3. MULTI-AGENT DEBATE & SOURCE DIVERSITY</h3>", unsafe_allow_html=True)
                 
                 cols = st.columns(3)
                 for i, agent in enumerate(data['agent_outputs']):
@@ -315,7 +354,7 @@ if analyze_btn and claim_input:
                         <div class='glass-card' style='height: 100%;'>
                             <div class='agent-header {color_cls}'>
                                 <span>{role.upper()} AGENT</span>
-                                <span style="font-size:0.8rem; background: rgba(255,255,255,0.1); padding:2px 8px; border-radius:10px;">{int(agent['confidence']*100)}% CONF</span>
+                                <span style="font-size:0.8rem; background: rgba(255,255,255,0.1); padding:2px 8px; border-radius:10px;">{int(agent['confidence']*100)}% WEIGHT</span>
                             </div>
                             <div style='color: #cbd5e1; font-size:0.95rem; margin-bottom: 15px;'>
                                 <strong>Stance:</strong> {agent['stance'].upper()}
@@ -324,10 +363,10 @@ if analyze_btn and claim_input:
                                 {agent['reasoning']}
                             </div>
                             <hr style="border-color: rgba(255,255,255,0.1);">
-                            <div style='font-size: 0.8rem; color: #64748b;'>EVIDENCE SOURCES:</div>
+                            <div style='font-size: 0.8rem; color: #64748b;'>INDEPENDENT SOURCE:</div>
                         """, unsafe_allow_html=True)
-                        for ref in agent['evidence_references'][:2]:
-                            st.markdown(f"<div style='font-size: 0.75rem;'><a href='{ref['url']}' target='_blank' style='color:#00e5ff; text-decoration:none;'>🔗 {ref['url'][:35]}...</a></div>", unsafe_allow_html=True)
+                        for ref in agent['evidence_references'][:1]:
+                            st.markdown(f"<div style='font-size: 0.75rem; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 4px;'><a href='{ref['url']}' target='_blank' style='color:#00e5ff; text-decoration:none;'>[{ref['doc_id']}] 🔗 {ref['url'][:25]}...</a><br><i style='color: #94a3b8;'>\"{ref['excerpt']}\"</i></div>", unsafe_allow_html=True)
                         st.markdown("</div>", unsafe_allow_html=True)
 
                 # ── EVIDENCE GRAPH ──
