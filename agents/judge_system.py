@@ -261,7 +261,7 @@ class JudgeSystem:
             for a in agent_outputs
         )
         prompt = f"""
-You are a judge synthesising fact-verification agent outputs into a concise summary.
+You are the VERITAS-Ω Chief Judge. Your goal is to synthesize the fact-verification agent outputs into a highly accurate, rigorous final reasoning summary.
 
 Claim: {claim.claim_text}
 Domain: {domain_mode.value}
@@ -270,8 +270,10 @@ Computed verdict: {verdict.value}  (confidence={confidence:.3f})
 Agent reasoning:
 {agent_block}
 
-Write a 2-4 sentence reasoning summary. Reference ONLY the agent reasoning above.
-Do not introduce external knowledge. Be precise and factual.
+RULES FOR YOUR SUMMARY:
+1. UNCERTAINTY DECOMPOSITION: Explicitly state what uncertainty exists and WHY (Epistemic vs Aleatoric).
+2. PROBABILISTIC AGGREGATION: Explain exactly why the final verdict was reached based on evidence strength and agent variance.
+3. RIGOR: Write a 3-5 sentence structured reasoning summary. Reference ONLY the agent reasoning above. Do not introduce external knowledge. Be brutally precise, factual, and strictly explain the math/logic behind the decision.
 """
         try:
             response = self._client.chat.completions.create(
