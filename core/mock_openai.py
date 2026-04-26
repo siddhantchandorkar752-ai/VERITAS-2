@@ -39,7 +39,7 @@ class MockChat:
         system_prompt = messages[0]["content"] if messages else ""
         
         # Determine what kind of response is needed based on prompt keywords
-        if "claim extraction engine" in system_prompt or "CLAIM NORMALIZATION" in system_prompt:
+        if "claim extraction engine" in system_prompt or "Extract factual" in system_prompt:
             content = json.dumps([{
                 "claim_text": "The verified atomic statement extracted from the input, stripped of all ambiguity and emotional bias.",
                 "entities": ["Concept A", "Concept B"],
@@ -72,7 +72,7 @@ class MockChat:
             })
         elif "fact-correction engine" in system_prompt or "CORRECTED CLAIM" in system_prompt:
             content = json.dumps({"corrected_text": "The phenomenon is observed under strictly controlled short-term conditions, but long-term longitudinal data remains statistically inconclusive. Original claim contained cherry-picked absolutes."})
-        elif "synthesising fact-verification" in system_prompt or "Chief Judge" in system_prompt or "VERITAS" in system_prompt:
+        elif "synthesising fact-verification" in system_prompt or "Chief Judge" in system_prompt:
             content = "UNCERTAINTY DECOMPOSITION: High Epistemic uncertainty exists due to missing long-term longitudinal data, compounded by Aleatoric variability in demographic responses. PROBABILISTIC AGGREGATION: The final verdict (PARTIALLY_TRUE) is reached because while the Pro Agent found statistically significant short-term correlations (conf=0.88), the Adversarial Agent correctly flagged cherry-picked data and funding bias (conf=0.72). The structural variance mathematically bounds our confidence to 62%, mandating a cautious partial verdict."
         else:
             content = json.dumps({"result": "mock_response"})

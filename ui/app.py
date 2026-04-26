@@ -204,17 +204,30 @@ def render_network(graph_data):
 if analyze_btn and claim_input:
     with st.spinner("Analyzing claim across multiverses..."):
         try:
-            # Call backend
-            response = requests.post("http://localhost:8000/verify", json={
-                "text": claim_input,
-                "domain_mode": domain_mode
-            })
-            res = response.json()
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from core.pipeline import VeritasPipeline
+            from core.schemas import DomainMode
             
-            if res.get('status') == 'error':
-                st.error(f"Backend Error: {res.get('error')}")
+            os.environ["USE_MOCK_LLM"] = os.getenv("USE_MOCK_LLM", "true")
+            
+            if "pipeline" not in st.session_state:
+                st.session_state.pipeline = VeritasPipeline(
+                    openai_api_key=os.getenv("OPENAI_API_KEY", "dummy"),
+                    run_consistency=False
+                )
+            
+            result = st.session_state.pipeline.run(
+                raw_input=claim_input,
+                domain_mode=DomainMode(domain_mode)
+            )
+            
+            data = result.model_dump(mode="json")
+            
+            if False:  # placeholder for error handling
+                pass
             else:
-                data = res['data']
                 judge = data['judge_output']
                 primary_claim = data['claims'][0]
                 
@@ -300,5 +313,5 @@ if analyze_btn and claim_input:
                         "stability_label": data.get('consistency_result', {}).get('stability_label', 'N/A')
                     })
                     
-        except requests.exceptions.ConnectionError:
-            st.error("Cannot connect to the VERITAS-Ω backend. Is the FastAPI server running?")
+        except Exception as e:
+            st.error(f"Pipeline Error: {str(e)}")
