@@ -14,128 +14,164 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ─── PREMIUM CSS ────────────────────────────────────────────────────────────
+# ─── 100x PREMIUM CYBERPUNK CSS ────────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* Premium Typography & Background */
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
     
+    /* Base App Styling */
     .stApp {
-        background-color: #050505;
+        background-color: #030712;
         background-image: 
-            radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.05) 0%, transparent 40%),
-            radial-gradient(circle at 90% 80%, rgba(138, 43, 226, 0.05) 0%, transparent 40%);
-        font-family: 'Outfit', sans-serif;
+            linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+        background-size: 30px 30px;
+        font-family: 'Rajdhani', sans-serif;
         color: #e2e8f0;
     }
     
-    h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+    /* Hide Streamlit Header & Footer */
+    header, footer {visibility: hidden !important;}
     
-    /* Title glowing effect */
+    /* 100x Title Effect */
     .glow-title {
-        font-size: 3rem;
-        font-weight: 800;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 4.5rem;
+        font-weight: 900;
         text-align: center;
-        background: linear-gradient(90deg, #00e5ff, #8a2be2);
+        background: linear-gradient(to right, #00f2fe, #4facfe, #00f2fe);
+        background-size: 200% auto;
+        color: #000;
+        background-clip: text;
+        text-fill-color: transparent;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
-        margin-bottom: 0.2rem;
-        letter-spacing: 2px;
+        animation: shine 3s linear infinite;
+        text-shadow: 0px 0px 20px rgba(0,242,254,0.5);
+        margin-bottom: 0;
+        letter-spacing: 0.1em;
     }
+    
+    @keyframes shine {
+        to { background-position: 200% center; }
+    }
+    
     .sub-title {
+        font-family: 'Orbitron', sans-serif;
         text-align: center;
-        color: #94a3b8;
-        font-weight: 300;
-        font-size: 1.2rem;
+        color: #00f2fe;
+        font-weight: 700;
+        font-size: 1rem;
         margin-bottom: 3rem;
-        letter-spacing: 5px;
+        letter-spacing: 8px;
         text-transform: uppercase;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 0.7; text-shadow: 0 0 10px rgba(0,242,254,0.2); }
+        50% { opacity: 1; text-shadow: 0 0 20px rgba(0,242,254,0.8); }
+        100% { opacity: 0.7; text-shadow: 0 0 10px rgba(0,242,254,0.2); }
     }
 
-    /* Glassmorphism containers */
+    /* 100x Glassmorphism Containers */
     .glass-card {
-        background: rgba(20, 25, 35, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 16px;
-        padding: 24px;
-        backdrop-filter: blur(20px);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-        margin-bottom: 20px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: rgba(10, 15, 25, 0.7) !important;
+        border: 1px solid rgba(0, 242, 254, 0.2) !important;
+        border-radius: 8px !important;
+        padding: 30px !important;
+        backdrop-filter: blur(12px) !important;
+        box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.05), 0 10px 30px rgba(0,0,0,0.8) !important;
+        margin-bottom: 25px !important;
+        position: relative !important;
+        overflow: hidden !important;
     }
-    .glass-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 40px 0 rgba(0, 229, 255, 0.1);
-        border-color: rgba(0, 229, 255, 0.2);
+    
+    /* Cyberpunk Corner Accents */
+    .glass-card::before {
+        content: ''; position: absolute; top: 0; left: 0; width: 20px; height: 20px;
+        border-top: 2px solid #00f2fe; border-left: 2px solid #00f2fe;
+    }
+    .glass-card::after {
+        content: ''; position: absolute; bottom: 0; right: 0; width: 20px; height: 20px;
+        border-bottom: 2px solid #00f2fe; border-right: 2px solid #00f2fe;
     }
     
     /* Verdict Badges */
     .verdict-box {
         text-align: center;
-        padding: 20px;
-        border-radius: 12px;
+        padding: 30px;
+        border-radius: 4px;
         margin-bottom: 20px;
+        text-transform: uppercase;
+        position: relative;
+        overflow: hidden;
     }
-    .verdict-TRUE { background: rgba(0, 230, 118, 0.1); border: 1px solid #00e676; box-shadow: 0 0 20px rgba(0, 230, 118, 0.2); }
-    .verdict-FALSE { background: rgba(255, 23, 68, 0.1); border: 1px solid #ff1744; box-shadow: 0 0 20px rgba(255, 23, 68, 0.2); }
-    .verdict-PARTIALLY_TRUE { background: rgba(255, 234, 0, 0.1); border: 1px solid #ffea00; box-shadow: 0 0 20px rgba(255, 234, 0, 0.2); }
-    .verdict-UNCERTAIN { background: rgba(158, 158, 158, 0.1); border: 1px solid #9e9e9e; }
+    .verdict-TRUE { background: rgba(0, 255, 136, 0.05); border: 2px solid #00ff88; box-shadow: 0 0 40px rgba(0, 255, 136, 0.2); }
+    .verdict-FALSE { background: rgba(255, 0, 85, 0.05); border: 2px solid #ff0055; box-shadow: 0 0 40px rgba(255, 0, 85, 0.2); }
+    .verdict-PARTIALLY_TRUE { background: rgba(255, 204, 0, 0.05); border: 2px solid #ffcc00; box-shadow: 0 0 40px rgba(255, 204, 0, 0.2); }
     
-    .verdict-text { font-size: 2.5rem; font-weight: 800; letter-spacing: 2px; }
-    .verdict-TRUE .verdict-text { color: #00e676; }
-    .verdict-FALSE .verdict-text { color: #ff1744; }
-    .verdict-PARTIALLY_TRUE .verdict-text { color: #ffea00; }
-    .verdict-UNCERTAIN .verdict-text { color: #9e9e9e; }
+    .verdict-text { font-family: 'Orbitron', sans-serif; font-size: 3.5rem; font-weight: 900; letter-spacing: 4px; margin-top: 10px;}
+    .verdict-TRUE .verdict-text { color: #00ff88; text-shadow: 0 0 20px #00ff88;}
+    .verdict-FALSE .verdict-text { color: #ff0055; text-shadow: 0 0 20px #ff0055;}
+    .verdict-PARTIALLY_TRUE .verdict-text { color: #ffcc00; text-shadow: 0 0 20px #ffcc00;}
     
-    /* Tag styling */
-    .domain-tag {
-        display: inline-block;
-        background: rgba(138, 43, 226, 0.2);
-        color: #d8b4fe;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border: 1px solid rgba(138, 43, 226, 0.5);
-        margin-right: 8px;
+    /* Input Styling Override */
+    div[data-baseweb="textarea"] > div {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        border: 1px solid rgba(0, 242, 254, 0.3) !important;
+        border-radius: 4px !important;
+    }
+    div[data-baseweb="textarea"] > div:focus-within {
+        border-color: #00f2fe !important;
+        box-shadow: 0 0 20px rgba(0, 242, 254, 0.4) !important;
+    }
+    textarea {
+        color: #00f2fe !important;
+        font-family: 'Rajdhani', sans-serif !important;
+        font-size: 1.2rem !important;
     }
     
-    /* Agent outputs styling */
+    /* Button Override */
+    .stButton > button {
+        background: linear-gradient(45deg, #00f2fe, #4facfe) !important;
+        color: #000 !important;
+        font-family: 'Orbitron', sans-serif !important;
+        font-weight: 900 !important;
+        font-size: 1.2rem !important;
+        border: none !important;
+        border-radius: 4px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 0 20px rgba(0, 242, 254, 0.4) !important;
+    }
+    .stButton > button:hover {
+        transform: scale(1.02) !important;
+        box-shadow: 0 0 40px rgba(0, 242, 254, 0.8) !important;
+    }
+
+    /* Agent Headers */
     .agent-header {
-        font-weight: 800;
-        font-size: 1.1rem;
-        margin-bottom: 10px;
+        font-family: 'Orbitron', sans-serif;
+        font-weight: 900;
+        font-size: 1.2rem;
+        margin-bottom: 15px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 8px;
+        border-bottom: 2px solid;
+        padding-bottom: 10px;
     }
-    .role-pro { color: #00e5ff; }
-    .role-con { color: #ff1744; }
-    .role-adversarial { color: #ffea00; }
-    
-    /* Smooth Inputs */
-    div[data-baseweb="textarea"] > div {
-        background-color: rgba(20, 25, 35, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-    }
-    div[data-baseweb="textarea"] > div:focus-within {
-        border-color: #00e5ff;
-        box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
-    }
-    
-    /* Streamlit overrides */
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
+    .role-pro { color: #00ff88; border-color: rgba(0,255,136,0.3); }
+    .role-con { color: #ff0055; border-color: rgba(255,0,85,0.3); }
+    .role-adversarial { color: #ffcc00; border-color: rgba(255,204,0,0.3); }
 </style>
 """, unsafe_allow_html=True)
 
 # ─── HEADER ─────────────────────────────────────────────────────────────────
 st.markdown("<div class='glow-title'>VERITAS-Ω</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>AUDITABLE MULTI-AGENT TRUTH ENGINE</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title'>Military-Grade Multi-Agent Truth Engine</div>", unsafe_allow_html=True)
 
 # ─── INPUT SECTION ──────────────────────────────────────────────────────────
 with st.container():
