@@ -327,6 +327,15 @@ class HybridRetriever:
                     source_domain="mocksource.com",
                     published_date="2023-02-01",
                     citation_count=20
+                ),
+                RetrievedDocument(
+                    doc_id="mock_doc_3",
+                    url="https://mocksource.com/article3",
+                    title="Mock Methodological Critique",
+                    snippet="The researchers explicitly note that long-term tracking was not performed, indicating potential biases.",
+                    source_domain="mocksource.com",
+                    published_date="2023-03-01",
+                    citation_count=10
                 )
             ]
         elif not raw_docs:

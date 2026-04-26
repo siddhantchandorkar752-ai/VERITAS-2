@@ -49,31 +49,31 @@ class MockChat:
         elif "PRO AGENT" in system_prompt or "Agent B" in system_prompt:
             content = json.dumps({
                 "stance": "supports",
-                "key_points": ["Tier 1 evidence confirms a statistically significant correlation (p < 0.01).", "Cross-verified across multiple peer-reviewed meta-analyses."],
-                "evidence_references": [{"doc_id": "mock_doc_1", "url": "https://mocksource.com/article1", "excerpt": "Clear evidence supporting the claim with high methodological rigor."}],
+                "key_points": ["Tier 1 evidence confirms a statistically significant correlation (p < 0.01) for the isolated variables.", "Cross-verified across multiple controlled trials."],
+                "evidence_references": [{"doc_id": "mock_doc_1", "url": "https://mocksource.com/article1", "excerpt": "Clear evidence supporting the claim under short-term laboratory conditions."}],
                 "confidence": 0.88,
-                "reasoning": "The evidence overwhelmingly supports the claim. Based on Tier 1 scientific consensus, there is virtually zero aleatoric uncertainty in the measurement mechanisms."
+                "reasoning": "The evidence robustly supports the claim under strict boundaries. However, I avoid declaring absolute consensus as longitudinal tracking is incomplete."
             })
         elif "CON AGENT" in system_prompt or "Agent A" in system_prompt:
             content = json.dumps({
                 "stance": "contradicts",
-                "key_points": ["Tier 2 institutional data contradicts the primary claim.", "Sample sizes in supporting studies fail statistical power tests."],
-                "evidence_references": [{"doc_id": "mock_doc_2", "url": "https://mocksource.com/article2", "excerpt": "Studies failed to replicate the original findings under controlled conditions."}],
+                "key_points": ["Tier 2 institutional data contradicts the long-term viability of the primary claim.", "Sample sizes in supporting studies fail statistical power tests for broad populations."],
+                "evidence_references": [{"doc_id": "mock_doc_2", "url": "https://mocksource.com/article2", "excerpt": "Studies failed to replicate the original findings across diverse demographics."}],
                 "confidence": 0.65,
-                "reasoning": "There are significant methodological flaws in the supporting evidence. Tier 2 data directly contradicts the premise, indicating high epistemic uncertainty regarding long-term effects."
+                "reasoning": "There are significant methodological limits in the supporting evidence. Tier 2 data directly contradicts the premise when applied broadly, indicating high epistemic uncertainty regarding long-term effects."
             })
         elif "ADVERSARIAL AGENT" in system_prompt or "Agent C" in system_prompt:
             content = json.dumps({
                 "stance": "flags_weakness",
-                "key_points": ["Detected cherry-picked data focusing only on short-term outcomes.", "False authority fallacy present in Tier 3 media coverage."],
-                "evidence_references": [{"doc_id": "mock_doc_1", "url": "https://mocksource.com/article1", "excerpt": "The researchers note that long-term longitudinal tracking was not performed."}],
+                "key_points": ["Detected cherry-picked data focusing only on short-term outcomes.", "False authority fallacy present in Tier 3 media interpretations of the core studies."],
+                "evidence_references": [{"doc_id": "mock_doc_3", "url": "https://mocksource.com/article3", "excerpt": "The researchers explicitly note that long-term tracking was not performed."}],
                 "confidence": 0.72,
-                "reasoning": "Rigorous adversarial analysis reveals significant funding bias in the primary sources. The lack of long-term tracking introduces critical Epistemic uncertainty, while inherent variability across demographics introduces Aleatoric uncertainty."
+                "reasoning": "Rigorous adversarial analysis reveals significant selection bias in the primary sources. The lack of long-term tracking introduces critical Epistemic uncertainty, which mathematically demands a penalty on the overall trust score."
             })
         elif "fact-correction engine" in system_prompt or "CORRECTED CLAIM" in system_prompt:
-            content = json.dumps({"corrected_text": "The phenomenon is observed under strictly controlled short-term conditions, but long-term longitudinal data remains statistically inconclusive. Original claim contained cherry-picked absolutes."})
+            content = json.dumps({"corrected_text": "The claimed effect occurs only under strict, short-term laboratory conditions; applying it to general populations over extended periods is unsupported due to missing longitudinal data."})
         elif "synthesising fact-verification" in system_prompt or "Chief Judge" in system_prompt:
-            content = "UNCERTAINTY DECOMPOSITION: High Epistemic uncertainty exists due to missing long-term longitudinal data, compounded by Aleatoric variability in demographic responses. PROBABILISTIC AGGREGATION: The final verdict (PARTIALLY_TRUE) is reached because while the Pro Agent found statistically significant short-term correlations (conf=0.88), the Adversarial Agent correctly flagged cherry-picked data and funding bias (conf=0.72). The structural variance mathematically bounds our confidence to 62%, mandating a cautious partial verdict."
+            content = "UNCERTAINTY DECOMPOSITION: Severe Epistemic uncertainty exists due to missing longitudinal data, compounded by Aleatoric variability across demographics. PROBABILISTIC AGGREGATION: The final verdict (PARTIALLY_TRUE) mathematically synthesizes the Pro Agent's short-term evidence with the Con Agent's broad contradiction. The Adversarial Agent's exposure of cherry-picked boundaries actively suppresses the composite trust score, proving the claim is technically true but contextually misleading."
         else:
             content = json.dumps({"result": "mock_response"})
 
