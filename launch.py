@@ -5,7 +5,7 @@ import webbrowser
 import time
 
 def main():
-    print("Starting VERITAS-Ω Backend...")
+    print("Starting VERITAS-Omega Backend...")
     
     # Path to the virtual env python
     venv_python = os.path.join(".venv", "Scripts", "python.exe")
@@ -16,7 +16,7 @@ def main():
 
     # Start FastAPI server
     server_process = subprocess.Popen(
-        [venv_python, "-m", "uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"],
+        [venv_python, "-m", "uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--env-file", ".env"],
         stdout=sys.stdout,
         stderr=sys.stderr
     )
@@ -26,17 +26,27 @@ def main():
     # Wait for server to boot
     time.sleep(3)
     
-    # Open UI in browser
-    ui_path = os.path.abspath(os.path.join("ui", "index.html"))
-    print(f"Opening UI: {ui_path}")
-    webbrowser.open(f"file://{ui_path}")
+    # Start Streamlit UI
+    print("Starting Premium Streamlit UI...")
+    ui_process = subprocess.Popen(
+        [venv_python, "-m", "streamlit", "run", "ui/app.py", "--server.port", "8501", "--server.headless", "true"],
+        stdout=sys.stdout,
+        stderr=sys.stderr
+    )
+
+    print("UI is starting on http://localhost:8501...")
+    time.sleep(2)
+    webbrowser.open("http://localhost:8501")
 
     try:
         server_process.wait()
+        ui_process.wait()
     except KeyboardInterrupt:
-        print("\nShutting down VERITAS-Ω...")
+        print("\nShutting down VERITAS-Omega...")
         server_process.terminate()
+        ui_process.terminate()
         server_process.wait()
+        ui_process.wait()
 
 if __name__ == "__main__":
     main()

@@ -24,6 +24,7 @@ import logging
 import uuid
 from typing import Optional
 
+import os
 import openai
 
 from agents.agent_system import AgentOrchestrator
@@ -41,6 +42,8 @@ from scoring.trust_scorer import TrustScorer
 logger = logging.getLogger(__name__)
 
 
+from core.mock_openai import MockOpenAIClient
+
 class VeritasPipeline:
     """
     Top-level pipeline. All dependencies are injected for testability.
@@ -52,7 +55,12 @@ class VeritasPipeline:
         run_consistency: bool = True,
         n_consistency_runs: int = 3,
     ):
-        client = openai.OpenAI(api_key=openai_api_key) if openai_api_key else openai.OpenAI()
+        use_mock = os.getenv("USE_MOCK_LLM", "true").lower() == "true"
+        if use_mock or not openai_api_key:
+            logger.info("Initializing with MockOpenAIClient (Offline/Free Mode)")
+            client = MockOpenAIClient()
+        else:
+            client = openai.OpenAI(api_key=openai_api_key)
 
         self._extractor     = ClaimExtractor(client)
         self._retriever     = HybridRetriever(openai_client=client)
