@@ -324,16 +324,16 @@ if analyze_btn and claim_input:
                     <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 20px;'>
                         <div>
                             <h4 style='color: #cbd5e1; font-size: 0.9rem;'>AGGREGATION FORMULA</h4>
-                            <code style='color: #00e676; background: #000; padding: 5px; border-radius: 4px; display: block; margin-bottom: 10px;'>Conf = α(Pro - Con)/(Pro + Con) + (1-α)GraphDiff</code>
-                            <div style='font-size: 0.8rem; color: #94a3b8;'>Adversarial Impact: Reduced base trust score by {(1.0 - judge['aggregated_trust_score']) * 100:.1f}%, directly diluting final composite confidence.</div>
+                            <code style='color: #00e676; background: #000; padding: 5px; border-radius: 4px; display: block; margin-bottom: 10px;'>Conf = (Pro - Con + GraphDiff)/2 - Penalty</code>
+                            <div style='font-size: 0.8rem; color: #94a3b8;'>Adversarial Penalty: Mathematically reduced trust score by {(1.0 - judge['aggregated_trust_score']) * 100:.1f}%, directly diluting base confidence.</div>
                         </div>
                         <div>
                             <h4 style='color: #cbd5e1; font-size: 0.9rem;'>UNCERTAINTY DECOMPOSITION</h4>
                             <div style='font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 4px;'>
-                                <span>Epistemic (Missing Data):</span> <span style='color: #ffea00;'>{judge['uncertainty_score'] * 0.7 * 100:.1f}%</span>
+                                <span>Epistemic (Missing Data / Adversarial Gap):</span> <span style='color: #ffea00;'>{judge['uncertainty_score'] * 0.8 * 100:.1f}%</span>
                             </div>
                             <div style='font-size: 0.8rem; color: #94a3b8; display: flex; justify-content: space-between; padding-top: 4px;'>
-                                <span>Aleatoric (System Noise):</span> <span style='color: #ff1744;'>{judge['uncertainty_score'] * 0.3 * 100:.1f}%</span>
+                                <span>Aleatoric (Systemic Noise / Agent Dispute):</span> <span style='color: #ff1744;'>{judge['uncertainty_score'] * 0.2 * 100:.1f}%</span>
                             </div>
                             <div style='font-size: 0.7rem; color: #64748b; margin-top: 8px;'>*Epistemic variance mathematically bounded by Adversarial Agent findings.</div>
                         </div>

@@ -105,19 +105,28 @@ class JudgeSystem:
         sup_graph = self._graph_builder.supporting_score(evidence_graph)
         con_graph = self._graph_builder.contradiction_score(evidence_graph)
 
-        # ── Step 3: Composite confidence ─────────────────────────────────
-        agent_diff = (pro_score - con_score) / (pro_score + con_score + _EPSILON)
+        # ── Step 3: Composite confidence (FIX 2) ─────────────────────────────────
+        agent_diff = pro_score - con_score
         graph_diff = sup_graph - con_graph
-        raw_confidence = _ALPHA * agent_diff + (1 - _ALPHA) * graph_diff
-        confidence = (raw_confidence + 1.0) / 2.0
+        
+        # Base confidence calculation without unstable division
+        base_confidence = (agent_diff + graph_diff) / 2.0  # Range [-1, 1]
+        
+        # ── Step 4: Aggregated trust & Adversarial Penalty (FIX 5 & 6) ────────
+        agg_trust = self._trust_scorer.aggregate_trust(documents)
+        
+        # Adversarial penalty directly reduces trust and confidence
+        penalty = adv_confidence * (1.0 - agg_trust)
+        raw_confidence = base_confidence - penalty
+        
+        confidence = (raw_confidence + 1.0) / 2.0  # Shift to [0, 1]
         confidence = round(min(max(confidence, 0.0), 1.0), 4)
 
-        # ── Step 4: Aggregated trust ──────────────────────────────────────
-        agg_trust = self._trust_scorer.aggregate_trust(documents)
-
-        # ── Step 5: Uncertainty ───────────────────────────────────────────
-        uncertainty = adv_confidence * (1.0 - agg_trust)
-        uncertainty = round(min(max(uncertainty, 0.0), 1.0 - confidence), 4)
+        # ── Step 5: Uncertainty (FIX 6) ───────────────────────────────────────────
+        # Quantify Epistemic vs Aleatoric directly
+        epistemic_uncertainty = penalty  # Driven by adversarial gaps
+        aleatoric_uncertainty = (1.0 - abs(agent_diff)) * 0.2  # Driven by systemic disagreement
+        uncertainty = round(min(epistemic_uncertainty + aleatoric_uncertainty, 1.0), 4)
 
         # ── Step 5b: Conflict resolution ──────────────────────────────────
         conflict = (

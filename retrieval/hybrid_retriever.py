@@ -307,6 +307,9 @@ class HybridRetriever:
 
         import os
         use_mock = os.getenv("USE_MOCK_LLM", "false").lower() == "true"
+        if use_mock:
+            raw_docs = []
+            
         if not raw_docs and use_mock:
             logger.info("Mock mode enabled, injecting fake documents.")
             raw_docs = [
