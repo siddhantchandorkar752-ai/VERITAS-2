@@ -106,7 +106,7 @@ print(result.evidence_status)  # synthetic
 ## Quality gates
 
 ```bash
-python -m pip install --upgrade pip==26.2.1
+python -m pip install --upgrade pip==26.2.1 setuptools==83.0.0
 python -m pip install -e ".[ui,dev,security]"
 ruff format --check .
 ruff check .
