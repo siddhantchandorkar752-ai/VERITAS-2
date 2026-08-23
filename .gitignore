@@ -1,6 +1,16 @@
 .venv/
+venv/
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+*.egg-info/
+build/
+dist/
+wheelhouse/
 .env
+.env.*
+!.env.example
 storage/
 .vscode/

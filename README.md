@@ -1,239 +1,155 @@
-<div align="center">
+# VERITAS research workbench
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:000000,25:1a0b2e,60:4b0082,100:00f2fe&height=280&section=header&text=VERITAS-Ω&fontSize=85&fontColor=ffffff&fontAlignY=38&desc=Military-Grade%20Forensic%20Truth%20Engine%20v2.0&descAlignY=62&descSize=22&animation=fadeIn" width="100%"/>
+An evidence-aggregation research prototype for inspecting claim decomposition, retrieval, structured model outputs, heuristic scoring, evidence graphs, and local trace fingerprints.
 
-<br/>
+[![Core quality gates](https://github.com/siddhantchandorkar752-ai/VERITAS-2/actions/workflows/ci.yml/badge.svg)](https://github.com/siddhantchandorkar752-ai/VERITAS-2/actions/workflows/ci.yml)
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[![Typing SVG](https://readme-typing-svg.demolab.com?font=Orbitron&weight=900&size=22&duration=2500&pause=700&color=00F2FE&center=true&vCenter=true&multiline=true&width=850&height=130&lines=Multi-Agent+Debate+%7C+Adversarial+Audit;Deterministic+Math+%7C+Graph+Topology;Epistemic+Uncertainty+%7C+Aleatoric+Noise;LLMs+Hallucinate.+VERITAS+Computes.)](https://git.io/typing-svg)
+VERITAS does **not** compute, prove, or establish truth. Its labels, confidence values, uncertainty values, source scores, corrections, and model-generated text are experimental outputs that require source inspection and independent human verification.
 
-<br/>
+## Evidence status
 
-<img src="https://img.shields.io/badge/Python-3.11+-00f2fe?style=for-the-badge&logo=python&logoColor=white"/>
-<img src="https://img.shields.io/badge/Streamlit-Dashboard-ff4b4b?style=for-the-badge&logo=streamlit&logoColor=white"/>
-<img src="https://img.shields.io/badge/NetworkX-Topology-8a2be2?style=for-the-badge"/>
-<img src="https://img.shields.io/badge/PyVis-Evidence_Graph-00e676?style=for-the-badge"/>
-<img src="https://img.shields.io/badge/Plotly-Neon_Graphics-005f73?style=for-the-badge&logo=plotly&logoColor=white"/>
-<img src="https://img.shields.io/badge/Architecture-Multi--Agent_Debate-00f2fe?style=for-the-badge"/>
-<img src="https://img.shields.io/badge/License-MIT-005f73?style=for-the-badge"/>
+| Claim | Status | Evidence |
+|---|---|---|
+| Explicit demo and live execution modes | Implemented | Mode contract tests |
+| Demo performs no retrieval/model network calls | Implemented | Network methods are patched to fail in the end-to-end demo test |
+| Demo output is input-dependent and deterministic | Implemented | Mock-client and pipeline regression tests |
+| Agent citations refer to retrieved documents | Implemented | Canonicalization tests reject unknown document IDs and replace URL/excerpt text from the retrieved record |
+| Wikipedia and arXiv retrieval | Implemented, experimental | Mocked transport tests; live availability depends on external services |
+| Evidence graph and heuristic aggregation | Implemented | Unit tests for graph/scoring boundaries |
+| Local trace fingerprints | Implemented | Audit tests and UUID/path validation |
+| Accuracy, calibration, fairness, robustness, or factual reliability | **Not established** | No labeled benchmark or reproducible evaluation artifact is published |
+| Medical or legal verification | **Out of scope** | UI restricts use to general research exploration |
+| Public hosted access | **Not established** | The current Streamlit URL redirects unauthenticated visitors to Streamlit authentication |
 
-<br/><br/>
+## Execution modes
 
-> ### *"LLMs generate plausible text. VERITAS-Ω mathematically computes the truth."*
-> VERITAS-Ω merges independent document retrieval, multi-agent adversarial debate, and deterministic bounding to create an auditable truth synthesis pipeline. Every claim is a node. Every piece of evidence is an edge. The math decides the verdict.
-
-<br/>
-
-### 🔴 LIVE NOW
-# [![LAUNCH VERITAS](https://img.shields.io/badge/%E2%9A%A1_LAUNCH_VERITAS--%CE%A9-CLICK_TO_RUN_LIVE-00f2fe?style=for-the-badge&labelColor=001219&logo=streamlit&logoColor=white)](https://veritas-2-siddhantchandorkar752-ai.streamlit.app/)
-
-> **No setup. No install. Runs in your browser.**
-
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/siddhantchandorkar752-ai/VERITAS-2)
-
-</div>
-
----
-
-## WHAT IS VERITAS-Ω?
-
-```
-╔══════════════════════════════════════════════════════════════════════╗
-║     VERITAS-Ω — Forensic Truth Engine v2.0                          ║
-║     "LLMs Hallucinate. VERITAS Computes."                           ║
-║                                                                      ║
-║     SOURCE LOOP:    Independent, domain-isolated document retrieval  ║
-║     AGENT LOOP:     Pro vs Con vs Adversarial Multi-Agent Debate     ║
-║     MATH LOOP:      Conf = (Pro - Con + GraphDiff)/2 - Penalty       ║
-║     INTERFACE:      Glassmorphism Pipeline Trace Dashboard           ║
-╚══════════════════════════════════════════════════════════════════════╝
-```
-
-VERITAS-Ω is a **deterministic, auditable fact-verification engine**. Instead of asking a single AI to guess an answer, VERITAS-Ω forces three independent AI agents into a localized courtroom debate. They cannot share sources. They must mathematically defend their stances. An Adversarial agent actively penalizes logical fallacies.
-
-> No semantic drift. No false consensus. The engine computes the truth.
-
----
-
-## THE PROBLEM
-
-```
-Modern LLMs were designed to sound convincing, not to be correct.
-
-Single prompts → Hallucinations.
-Shared context → Circular validation bias.
-Hidden reasoning → Zero auditability.
-
-Traditional verification relies on vague "percentages" or human review.
-They answer after the fact. They cannot prove their work.
-
-VERITAS-Ω changes this.
-Agents argue. Math decides.
-```
-
-| Verification Failure Mode | Traditional AI | VERITAS-Ω |
-|---------------------------|----------------|-----------|
-| **Complex sentence structure** | Answers whole prompt blindly | Extracts & normalizes atomic sub-claims |
-| **Source contamination** | Models agree using the same link | Enforces strictly independent `doc_id` references |
-| **False Scientific Consensus**| Echo-chamber validation | Adversarial Agent penalizes trust score |
-| **Black-box reasoning** | "I am 88% confident." | Outputs bounded Epistemic & Aleatoric uncertainty |
-
----
-
-## MULTI-AGENT ARCHITECTURE
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                       VERITAS NEURAL CORE                            │
-│                                                                      │
-│  ┌───────────────────────────────┐  ┌────────────────────────────┐  │
-│  │   SOURCE ISOLATION LAYER      │  │     ADVERSARIAL LOOP       │  │
-│  │                               │  │                            │  │
-│  │  Domain-Filtered Search       │  │  Pro Agent (Supports)      │  │
-│  │  (ArXiv / Legal / Medical)    ├──►                            │  │
-│  │                               │  │  Con Agent (Contradicts)   │  │
-│  │  Enforced Independence        │  │                            │  │
-│  │  (No shared doc_ids)          │  │  Adversarial Agent         │  │
-│  │                               │  │  (Flags semantic drift)    │  │
-│  └───────────────┬───────────────┘  └──────────────┬─────────────┘  │
-│                  │                                  │                │
-│                  └─────────────────┬────────────────┘                │
-│                                    ▼                                 │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │            DETERMINISTIC AGGREGATION JUDGE                   │    │
-│  │  Conf = (Pro - Con + GraphDiff)/2 - Adversarial Penalty     │    │
-│  │  Outputs: TRUE / FALSE / PARTIALLY_TRUE / UNCERTAIN         │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## MATHEMATICAL AGGREGATION SYSTEM
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                                                                      │
-│   BASE CONFIDENCE   = (Agent_Diff + Graph_Diff) / 2                  │
-│   ADVERSARIAL PENALTY = Adv_Score * (1.0 - Aggregated_Trust)         │
-│   FINAL CONFIDENCE  = Base_Confidence - Adversarial_Penalty          │
-│                                                                      │
-│   EPISTEMIC UNCERTAINTY = Adversarial gap (Missing data/bias)        │
-│   ALEATORIC UNCERTAINTY = Systemic noise (Agent dispute variance)    │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## LIVE PIPELINE TRACKING
-
-| Phase | Operation | Engine Output | Security Outcome |
-|:-----:|:---------:|:-------------:|:----------------:|
-| **1. Grounding** | Normalize Input | "Is UN resolution mandatory?" | Prevents semantic drift |
-| **2. Retrieval** | Scrape & Filter | Tier 1/2 domain sources | Prevents domain mismatch |
-| **3. Debate** | Pro/Con Analysis | Conflicting confidence scores | Exposes systemic noise |
-| **4. Audit** | Adversarial Strike | Flags non-binding fallacy | Penalizes trust score |
-| **5. Verdict** | Compute Math | `PARTIALLY_TRUE` (32.4%) | Mathematically bounded |
-
----
-
-## ENGINEERING HIGHLIGHTS
-
-| Feature | Implementation | Why It Matters |
-|---------|---------------|----------------|
-| **Evidence Topology** | NetworkX + PyVis | Maps citations to claims visually |
-| **Deterministic Math** | Python `JudgeSystem` | Replaces LLM "guessing" with hard boundaries |
-| **Source Isolation** | Hybrid Retriever | Stops agents from cross-contaminating evidence |
-| **Glassmorphism UI** | Streamlit + Custom CSS | Executive-level forensic dashboard |
-| **Offline Mode** | `MockOpenAIClient` | Death-proof engine execution |
-
----
-
-## RESEARCH CONTEXT
-
-VERITAS-Ω addresses three open challenges in **Agentic Fact Verification**:
-
-| Challenge | Description | How VERITAS Solves It |
-|-----------|-------------|-----------------------|
-| **Sycophancy** | LLMs agree with user bias | Adversarial agent mathematically penalizes consensus |
-| **Pseudo-Diversity** | Multi-agents using one source | Hardcoded isolation of `doc_id` references |
-| **Uncertainty Mapping** | Vague confidence scores | Splits Epistemic (missing data) & Aleatoric (noise) |
-
----
-
-## PROJECT STRUCTURE
-
-```
-VERITAS-Ω/
-├── core/
-│   ├── pipeline.py             # Orchestrates the 5-stage reasoning loop
-│   └── mock_openai.py          # Deterministic offline mock engine
-├── agents/
-│   └── judge_system.py         # The mathematical bounding formulas
-├── retrieval/
-│   └── hybrid_retriever.py     # Source isolation & scraping
-├── ui/
-│   └── app.py                  # Streamlit glassmorphism OS
-├── requirements.txt            # Streamlit Cloud dependencies
-└── README.md
-```
-
----
-
-## QUICK START
+### Demo mode (default)
 
 ```bash
-# 1. Clone
-git clone https://github.com/siddhantchandorkar752-ai/VERITAS-2.git
-cd VERITAS-2
-
-# 2. Setup
-python -m venv venv
-venv\Scripts\activate        # Windows
-source venv/bin/activate     # Mac/Linux
-
-# 3. Install core stack
-pip install -r requirements.txt
-
-# 4. Launch
+set VERITAS_MODE=demo       # Windows PowerShell: $env:VERITAS_MODE = "demo"
 streamlit run ui/app.py
 ```
 
----
+Demo mode:
 
-## TECH STACK
+- makes no Wikipedia, arXiv, or model-provider request;
+- creates deterministic synthetic embeddings, evidence, and structured agent responses;
+- uses reserved `demo.invalid` URLs;
+- labels every presented result synthetic.
 
-| Layer | Technology | Why |
-|-------|-----------|-----|
-| **Agent Logic** | Python OOP | Absolute control over reasoning execution |
-| **Graphing** | NetworkX | Maps complex evidence relationships |
-| **Dashboard** | Streamlit | Fast iteration, extreme custom CSS |
-| **Visualization** | Plotly & PyVis | Interactive topology mapping |
-| **Deployment** | Streamlit Cloud | Serverless, zero-downtime execution |
+Demo labels and numbers test the pipeline plumbing only. They say nothing about the submitted claim.
 
----
+### Live research mode
 
-## LICENSE
+```bash
+export VERITAS_MODE=live
+export OPENAI_API_KEY=your-secret-from-a-secure-store
+streamlit run ui/app.py
+```
 
-MIT License — built for an auditable, transparent AI future.
+Live mode fails closed when `OPENAI_API_KEY` is absent. It can send submitted text to Wikipedia, arXiv, and the configured OpenAI models. Review provider retention, privacy, acceptable-use, and cost policies before enabling it. Do not submit confidential, personal, privileged, regulated, or otherwise sensitive material.
 
----
+## Architecture
 
-<div align="center">
+```text
+submitted text
+  └─ claim extraction
+      └─ retrieval
+          ├─ demo: deterministic synthetic fixtures, no network
+          └─ live: Wikipedia + arXiv candidates
+              └─ BM25 + embedding ranks → reciprocal-rank fusion
+                  └─ heuristic source scoring
+                      └─ pro / con / adversarial structured outputs
+                          └─ canonical citation validation
+                              └─ evidence graph + bounded aggregation
+                                  └─ optional correction candidate
+                                      └─ local trace fingerprints
+```
 
-<img src="https://capsule-render.vercel.app/api?type=rect&color=0:001219,50:4b0082,100:001219&height=70&text=Siddhant%20Chandorkar&fontSize=28&fontColor=00f2fe&fontAlign=50&fontAlignY=50" width="500"/>
+Trust boundaries:
 
-<br/><br/>
+- Retrieved titles, snippets, and model responses are untrusted data.
+- Unknown citation IDs are rejected; URL and excerpt values are taken from the retrieved record, not copied from model output.
+- All three agent roles must complete before aggregation continues.
+- Source authority, recency, citation, agreement, confidence, and uncertainty values are hand-designed heuristics—not learned or calibrated probabilities.
+- A SHA-256 trace value can detect a changed serialization. It is not a signature, immutable ledger, replay record, or proof that the underlying result is correct.
 
-[![GitHub](https://img.shields.io/badge/GitHub-siddhantchandorkar752--ai-005f73?style=for-the-badge&logo=github&logoColor=white)](https://github.com/siddhantchandorkar752-ai)
-[![HuggingFace](https://img.shields.io/badge/HuggingFace-siddhantchandorkar-00f2fe?style=for-the-badge&logo=huggingface&logoColor=white)](https://huggingface.co/siddhantchandorkar)
+## Install
 
-<br/>
+Requirements: Python 3.11–3.13.
 
-*"I don't just write code. I build neural ecosystems for the smart-city era."*
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+python -m pip install -e ".[ui]"
+```
 
-<br/>
+The application no longer declares the previous unused ChromaDB, FastAPI, SciPy, python-dotenv, or PyVis stack. Streamlit currently brings Uvicorn transitively, and the OpenAI SDK brings its own HTTP client; neither is imported directly by VERITAS. Package versions declared by this project are fixed in `pyproject.toml` so a clean install is reviewable.
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:00f2fe,40:4b0082,100:000000&height=140&section=footer&text=VERITAS%20ONLINE%20v2.0&fontSize=34&fontColor=00f2fe&fontAlignY=68&animation=fadeIn" width="100%"/>
+## Run without the UI
 
-</div>
+```python
+from core.pipeline import VeritasPipeline
+from core.schemas import ExecutionMode
+
+result = VeritasPipeline(
+    mode=ExecutionMode.DEMO,
+    run_consistency=False,
+).run("The Earth orbits the Sun.")
+
+print(result.execution_mode)  # demo
+print(result.evidence_status)  # synthetic
+```
+
+## Quality gates
+
+```bash
+python -m pip install --upgrade pip==26.2.1
+python -m pip install -e ".[ui,dev,security]"
+ruff format --check .
+ruff check .
+python -m unittest discover -s tests -v
+python -m pip wheel --no-deps . --wheel-dir wheelhouse
+python -m compileall -q agents audit config consistency core correction graph retrieval scoring ui
+python -m pip check
+python -m pip_audit --local --skip-editable --progress-spinner off
+```
+
+CI uses demo mode, mocked transports, security linting, an installed-dependency audit, official actions pinned to full commit SHAs, and no API credential.
+
+## Limitations and prohibited use
+
+Do not use VERITAS for:
+
+- medical diagnosis, treatment, triage, or safety decisions;
+- legal advice, legal status, guilt, liability, or rights determinations;
+- election, journalistic publication, identity, employment, credit, housing, insurance, education, or access-control decisions;
+- accusations about a person or organization;
+- autonomous moderation, enforcement, or censorship.
+
+Known limitations include retrieval coverage, source selection bias, stale or misleading sources, prompt injection in retrieved text, model hallucination, correlated model outputs, brittle entity extraction, heuristic thresholds, missing citation counts, external-service failures, and distribution shift. The current code processes only the first extracted claim through the full downstream pipeline.
+
+## Repository map
+
+```text
+core/                    schemas, mock client, claim extraction, pipeline
+retrieval/               Wikipedia/arXiv adapters, BM25, embeddings, RRF
+agents/                  structured pro/con/adversarial outputs and judge
+scoring/                 source-score heuristics
+graph/                   evidence nodes and typed edges
+consistency/             repeated-run aggregation experiment
+correction/              model-generated correction candidate
+audit/                   local trace fingerprints and persistence
+ui/app.py                safe Streamlit presentation
+tests/                   trust-boundary and behavior contracts
+```
+
+## Security and privacy
+
+Read [SECURITY.md](SECURITY.md). Keep API keys in the deployment platform's encrypted secret store. Local audit files are excluded from Git, but operators must separately control filesystem permissions, backups, logs, traces, retention, and deletion.
+
+## License
+
+Source code is available under the [MIT License](LICENSE). External services, retrieved content, and third-party packages retain their own terms and licenses.

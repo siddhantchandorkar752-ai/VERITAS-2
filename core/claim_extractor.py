@@ -3,13 +3,12 @@ VERITAS-Ω — Claim Extraction Pipeline
 Converts raw natural-language input into atomic, machine-verifiable claims.
 
 Algorithm:
-  1. Sentence segmentation via spaCy
-  2. LLM-assisted atomic decomposition (one fact per claim)
-  3. Entity extraction using NER
-  4. Temporal scope resolution
-  5. Claim type classification
-  6. JSON schema validation via Pydantic
+  1. Model-assisted structured decomposition (one proposed fact per claim)
+  2. Model-proposed entities, temporal scope, and claim type
+  3. JSON shape and field validation via Pydantic
+  4. Text-normalized exact deduplication
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -17,7 +16,6 @@ import json
 import logging
 import re
 import time
-from typing import List, Optional
 
 import openai
 
@@ -39,21 +37,22 @@ Rules:
 - Extract named entities (people, places, organizations, quantities).
 - Infer temporal_scope where stated; use null when unspecified.
 
-Return ONLY a valid JSON array matching this schema:
-[
-  {
+Return ONLY one valid JSON object matching this schema:
+{
+  "claims": [{
     "claim_text": "<string>",
     "entities": ["<entity1>", ...],
     "temporal_scope": {"start": "<ISO-date or null>", "end": "<ISO-date or null>", "is_current": <bool>},
     "claim_type": "<factual|causal|statistical|opinion>"
-  }
-]
+  }]
+}
 """
 
 _EXTRACTION_USER = "Extract all atomic claims from the following text:\n\n{text}"
 
 
 # ─── Core Extractor ──────────────────────────────────────────────────────────
+
 
 class ClaimExtractor:
     """
@@ -74,12 +73,12 @@ class ClaimExtractor:
         return deduplicate(validated)                // §6: dedup
     """
 
-    def __init__(self, client: Optional[openai.OpenAI] = None):
+    def __init__(self, client: openai.OpenAI | None = None):
         self._client = client or openai.OpenAI()
 
     # ── public ───────────────────────────────────────────────────────────────
 
-    def extract(self, raw_text: str) -> List[Claim]:
+    def extract(self, raw_text: str) -> list[Claim]:
         """
         Main entry point. Returns a list of validated Claim objects.
         Raises ValueError if LLM returns malformed JSON or empty claims.
@@ -108,18 +107,18 @@ class ClaimExtractor:
             model=MODEL_CFG.claim_extractor_model,
             messages=[
                 {"role": "system", "content": _EXTRACTION_SYSTEM},
-                {"role": "user",   "content": _EXTRACTION_USER.format(text=text)},
+                {"role": "user", "content": _EXTRACTION_USER.format(text=text)},
             ],
-            temperature=0.0,        # deterministic extraction
+            temperature=0.0,  # deterministic extraction
             response_format={"type": "json_object"},
         )
         content = response.choices[0].message.content
         return content
 
-    def _parse_response(self, raw: str) -> List[dict]:
+    def _parse_response(self, raw: str) -> list[dict]:
         """
-        Parse LLM JSON output. The model is prompted for an array but may
-        wrap it in {"claims": [...]} — handle both forms.
+        Parse LLM JSON output. The requested shape is {"claims": [...]};
+        accept a bare array or known wrapper aliases defensively.
         """
         data = json.loads(raw)
         if isinstance(data, list):
@@ -131,7 +130,7 @@ class ClaimExtractor:
                     return data[key]
         raise ValueError(f"Unexpected LLM JSON shape: {type(data)}")
 
-    def _validate_and_build(self, raw_claims: List[dict], source: str) -> List[Claim]:
+    def _validate_and_build(self, raw_claims: list[dict], source: str) -> list[Claim]:
         validated = []
         for i, rc in enumerate(raw_claims):
             try:
@@ -153,13 +152,13 @@ class ClaimExtractor:
                 logger.warning("Skipping malformed claim at index %d: %s", i, exc)
         return validated
 
-    def _deduplicate(self, claims: List[Claim]) -> List[Claim]:
+    def _deduplicate(self, claims: list[Claim]) -> list[Claim]:
         """
         Remove near-duplicate claims using SHA-256 of normalised claim text.
         Normalisation: lowercase + collapse whitespace + strip punctuation.
         """
         seen: set = set()
-        unique: List[Claim] = []
+        unique: list[Claim] = []
         for c in claims:
             key = self._normalise(c.claim_text)
             h = hashlib.sha256(key.encode()).hexdigest()
