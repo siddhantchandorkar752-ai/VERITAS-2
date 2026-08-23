@@ -1,8 +1,8 @@
 """
 VERITAS-Ω — Consistency Layer
 
-Purpose: Run the full pipeline N times with stochastic variation
-to measure output stability.
+Purpose: Repeat a configured pipeline N times and summarize observed output
+agreement. Repetition does not establish correctness or independence.
 
 Stability Score Formulation
 ───────────────────────────
@@ -22,12 +22,13 @@ Given N runs producing verdicts {v₁,...,vₙ} and confidences {c₁,...,cₙ}:
     stability_score ≥ low_stability  (0.50) → MODERATE
     otherwise                               → UNSTABLE
 """
+
 from __future__ import annotations
 
 import logging
 import statistics
 from collections import Counter
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
 
 from config.settings import CONSISTENCY_CFG
 from core.schemas import (
@@ -52,13 +53,13 @@ class ConsistencyLayer:
     The pipeline_fn is a callable:
         pipeline_fn(claim: Claim, domain_mode: DomainMode, run_seed: int) -> JudgeOutput
 
-    run_seed introduces stochastic variation: the caller should use it
-    to vary LLM temperature or random retrieval order between runs.
+    run_seed is supplied for callers that explicitly configure variation.
+    A caller may ignore it, in which case this measures repeated execution only.
     """
 
-    def __init__(self, n_runs: Optional[int] = None):
+    def __init__(self, n_runs: int | None = None):
         self._cfg = CONSISTENCY_CFG
-        self._n   = n_runs or self._cfg.n_runs
+        self._n = n_runs or self._cfg.n_runs
 
     def evaluate(
         self,
@@ -82,8 +83,8 @@ class ConsistencyLayer:
             majority_verdict = mode(verdicts)
             return aggregate(verdicts, confidences)
         """
-        verdicts:    List[Verdict] = []
-        confidences: List[float]   = []
+        verdicts: list[Verdict] = []
+        confidences: list[float] = []
 
         for seed in range(self._n):
             try:
@@ -92,15 +93,16 @@ class ConsistencyLayer:
                 confidences.append(out.confidence_score)
                 logger.debug(
                     "Consistency run %d/%d: verdict=%s conf=%.3f",
-                    seed + 1, self._n, out.verdict.value, out.confidence_score,
+                    seed + 1,
+                    self._n,
+                    out.verdict.value,
+                    out.confidence_score,
                 )
             except Exception as exc:
                 logger.warning("Consistency run %d failed: %s", seed + 1, exc)
 
         if not verdicts:
-            raise RuntimeError(
-                f"All {self._n} consistency runs failed for claim {claim.claim_id}"
-            )
+            raise RuntimeError(f"All {self._n} consistency runs failed for claim {claim.claim_id}")
 
         return self._aggregate(claim.claim_id, verdicts, confidences)
 
@@ -109,16 +111,16 @@ class ConsistencyLayer:
     def _aggregate(
         self,
         claim_id: str,
-        verdicts: List[Verdict],
-        confidences: List[float],
+        verdicts: list[Verdict],
+        confidences: list[float],
     ) -> ConsistencyResult:
         counter = Counter(verdicts)
         majority_verdict, majority_count = counter.most_common(1)[0]
         majority_fraction = majority_count / len(verdicts)
 
         mean_conf = statistics.mean(confidences)
-        conf_var  = statistics.variance(confidences) if len(confidences) > 1 else 0.0
-        norm_var  = min(conf_var / _MAX_VARIANCE, 1.0)
+        conf_var = statistics.variance(confidences) if len(confidences) > 1 else 0.0
+        norm_var = min(conf_var / _MAX_VARIANCE, 1.0)
 
         stability_score = majority_fraction * (1.0 - norm_var)
         stability_score = round(min(max(stability_score, 0.0), 1.0), 4)

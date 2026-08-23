@@ -32,15 +32,13 @@ function build_graph(claim, agent_outputs, documents):
     return G
 
 Update Rule (on new evidence):
-  If a new document d is added post-construction:
-    1. Embed d → compare cosine with existing evidence nodes.
-    2. If cosine ≥ dedup_threshold → merge (keep higher trust_score).
-    3. Else → add new evidence_node + edges from matching agents.
+  Upstream retrieval performs semantic deduplication. This module adds a node
+  only when its document ID is new, then adds matching agent edges.
 """
+
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Optional
 
 from core.schemas import (
     AgentOutput,
@@ -56,17 +54,20 @@ logger = logging.getLogger(__name__)
 
 # ─── Stance → EdgeType mapping ───────────────────────────────────────────────
 
-_STANCE_MAP: Dict[str, EdgeType] = {
-    "supports":         EdgeType.SUPPORTS,
-    "contradicts":      EdgeType.CONTRADICTS,
-    "flags_weakness":   EdgeType.CONTRADICTS,  # treated as contradicting evidence
-    "neutral":          EdgeType.NEUTRAL,
+_STANCE_MAP: dict[str, EdgeType] = {
+    "supports": EdgeType.SUPPORTS,
+    "contradicts": EdgeType.CONTRADICTS,
+    # A weakness is not itself counter-evidence. Keep it visible without
+    # silently converting an uncertainty signal into a contradiction.
+    "flags_weakness": EdgeType.NEUTRAL,
+    "neutral": EdgeType.NEUTRAL,
 }
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # EVIDENCE GRAPH BUILDER
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 class EvidenceGraphBuilder:
     """
@@ -76,8 +77,8 @@ class EvidenceGraphBuilder:
     def build(
         self,
         claim: Claim,
-        agent_outputs: List[AgentOutput],
-        documents: List[RetrievedDocument],
+        agent_outputs: list[AgentOutput],
+        documents: list[RetrievedDocument],
     ) -> EvidenceGraph:
         graph = EvidenceGraph(claim_id=claim.claim_id)
 
@@ -92,7 +93,7 @@ class EvidenceGraphBuilder:
         graph.nodes.append(claim_node)
 
         # ── 2. Evidence nodes ─────────────────────────────────────────────
-        doc_map: Dict[str, RetrievedDocument] = {d.doc_id: d for d in documents}
+        doc_map: dict[str, RetrievedDocument] = {d.doc_id: d for d in documents}
         for doc in documents:
             ev_node = EvidenceNode(
                 node_id=doc.doc_id,
@@ -100,8 +101,8 @@ class EvidenceGraphBuilder:
                 text=doc.snippet,
                 trust_score=doc.trust_score,
                 metadata={
-                    "url":    doc.url,
-                    "title":  doc.title,
+                    "url": doc.url,
+                    "title": doc.title,
                     "domain": doc.source_domain,
                     "published_date": doc.published_date or "",
                 },
@@ -146,16 +147,13 @@ class EvidenceGraphBuilder:
         self,
         graph: EvidenceGraph,
         new_doc: RetrievedDocument,
-        new_agent_output: Optional[AgentOutput],
-        cosine_threshold: float = 0.92,
+        new_agent_output: AgentOutput | None,
     ) -> EvidenceGraph:
         """
         Update rule: add a new evidence node (if not duplicate) and
         edges from the new agent output.
 
-        Args:
-            cosine_threshold: skip new_doc if its text is too similar
-                              to an existing node (handled upstream by retriever).
+        Semantic deduplication is handled upstream by the retriever.
         """
         existing_ids = {n.node_id for n in graph.nodes}
         if new_doc.doc_id not in existing_ids:
@@ -166,8 +164,8 @@ class EvidenceGraphBuilder:
                     text=new_doc.snippet,
                     trust_score=new_doc.trust_score,
                     metadata={
-                        "url":    new_doc.url,
-                        "title":  new_doc.title,
+                        "url": new_doc.url,
+                        "title": new_doc.title,
                         "domain": new_doc.source_domain,
                     },
                 )
@@ -201,9 +199,7 @@ class EvidenceGraphBuilder:
         edges = graph.edges
         if not edges:
             return 0.0
-        support_weight = sum(
-            e.confidence for e in edges if e.edge_type == EdgeType.SUPPORTS
-        )
+        support_weight = sum(e.confidence for e in edges if e.edge_type == EdgeType.SUPPORTS)
         total_weight = sum(e.confidence for e in edges)
         return round(support_weight / max(total_weight, 1e-9), 4)
 
@@ -215,8 +211,6 @@ class EvidenceGraphBuilder:
         edges = graph.edges
         if not edges:
             return 0.0
-        contra_weight = sum(
-            e.confidence for e in edges if e.edge_type == EdgeType.CONTRADICTS
-        )
+        contra_weight = sum(e.confidence for e in edges if e.edge_type == EdgeType.CONTRADICTS)
         total_weight = sum(e.confidence for e in edges)
         return round(contra_weight / max(total_weight, 1e-9), 4)

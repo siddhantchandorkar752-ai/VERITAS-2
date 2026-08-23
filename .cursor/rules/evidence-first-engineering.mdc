@@ -1,0 +1,19 @@
+---
+description: Evidence-first standards for the VERITAS research workbench
+alwaysApply: true
+---
+
+# Evidence-first engineering
+
+- Never describe VERITAS as computing, proving, or establishing truth.
+- Label demo evidence and outputs synthetic everywhere they appear.
+- Demo mode must make zero retrieval or model-provider network calls.
+- Live mode must fail closed when its API key is absent.
+- Treat retrieved content and model responses as untrusted data; never render them as raw HTML.
+- Canonicalize every citation from the retrieved document set and reject unknown document IDs.
+- Keep medical, legal, journalistic, election, employment, identity, and access-control decisions out of scope.
+- Do not call local audit hashes signatures, an immutable ledger, replay evidence, or proof of correctness.
+- Add tests when changing modes, retrieval, citations, scoring boundaries, schemas, or presentation labels.
+- Use review branches and pull requests; never push directly to the default branch.
+
+Before completion, run `ruff format --check .`, `ruff check .`, `python -m unittest discover -s tests -v`, `python -m compileall -q .`, and `python -m pip check`.

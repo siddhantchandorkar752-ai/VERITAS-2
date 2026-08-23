@@ -27,13 +27,12 @@ and must sum to 1.0.
 All four sub-scores are bounded to [0, 1] before combination,
 producing a final TrustScore ∈ [0, 1].
 """
+
 from __future__ import annotations
 
 import logging
 import math
-from datetime import datetime, timezone
-from typing import Dict, List, Optional
-from urllib.parse import urlparse
+from datetime import UTC, datetime
 
 from config.settings import DOMAIN_AUTHORITY, RECENCY_HALF_LIFE_DAYS, TRUST_WEIGHTS
 from core.schemas import RetrievedDocument
@@ -49,6 +48,7 @@ _LAMBDA: float = math.log(2) / RECENCY_HALF_LIFE_DAYS
 # ══════════════════════════════════════════════════════════════════════════════
 # TRUST SCORER
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 class TrustScorer:
     """
@@ -70,22 +70,22 @@ class TrustScorer:
 
     def score_documents(
         self,
-        documents: List[RetrievedDocument],
-        stances: Optional[Dict[str, str]] = None,
-    ) -> List[RetrievedDocument]:
+        documents: list[RetrievedDocument],
+        stances: dict[str, str] | None = None,
+    ) -> list[RetrievedDocument]:
         """
         Score all documents. `stances` maps doc_id → "supports"|"contradicts"|"neutral".
         If stances are not yet known (pre-agent phase), CSA defaults to 0.5.
         """
         for doc in documents:
-            da  = self._domain_authority(doc.source_domain)
-            cc  = self._citation_count_norm(doc.citation_count)
+            da = self._domain_authority(doc.source_domain)
+            cc = self._citation_count_norm(doc.citation_count)
             rec = self._recency(doc.published_date)
             csa = self._cross_source_agreement(doc, documents, stances)
 
             doc.trust_score = (
-                TRUST_WEIGHTS.w_da  * da
-                + TRUST_WEIGHTS.w_cc  * cc
+                TRUST_WEIGHTS.w_da * da
+                + TRUST_WEIGHTS.w_cc * cc
                 + TRUST_WEIGHTS.w_rec * rec
                 + TRUST_WEIGHTS.w_csa * csa
             )
@@ -93,7 +93,7 @@ class TrustScorer:
 
         return documents
 
-    def aggregate_trust(self, documents: List[RetrievedDocument]) -> float:
+    def aggregate_trust(self, documents: list[RetrievedDocument]) -> float:
         """
         Compute an aggregated trust score for a set of documents.
         Uses weighted mean: docs with higher fusion_score get more weight.
@@ -106,7 +106,7 @@ class TrustScorer:
         weights = [max(d.fusion_score, 1e-9) for d in documents]
         total_w = sum(weights)
         return round(
-            sum(w * d.trust_score for w, d in zip(weights, documents)) / total_w,
+            sum(w * d.trust_score for w, d in zip(weights, documents, strict=True)) / total_w,
             4,
         )
 
@@ -118,12 +118,12 @@ class TrustScorer:
         DA(source) — lookup in DOMAIN_AUTHORITY table.
         Strips to second-level domain before matching.
         """
-        fqdn = domain.lower().lstrip("www.")
+        fqdn = domain.lower().removeprefix("www.")
         # try exact match first, then suffix match
         if fqdn in DOMAIN_AUTHORITY:
             return DOMAIN_AUTHORITY[fqdn]
         for key, val in DOMAIN_AUTHORITY.items():
-            if key != "default" and fqdn.endswith(key):
+            if key != "default" and fqdn.endswith(f".{key}"):
                 return val
         return DOMAIN_AUTHORITY["default"]
 
@@ -133,10 +133,11 @@ class TrustScorer:
         CC_norm(s) = log(1 + count) / log(1 + MAX_CITATIONS)
         Result ∈ [0, 1].
         """
-        return math.log1p(max(count, 0)) / math.log1p(_MAX_CITATIONS)
+        normalized = math.log1p(max(count, 0)) / math.log1p(_MAX_CITATIONS)
+        return min(normalized, 1.0)
 
     @staticmethod
-    def _recency(published_date: Optional[str]) -> float:
+    def _recency(published_date: str | None) -> float:
         """
         Rec(s) = exp(−λ · age_days)
         age_days = days since published_date; 0 if date unknown.
@@ -145,8 +146,9 @@ class TrustScorer:
         if not published_date:
             return 0.5
         try:
-            pub = datetime.fromisoformat(published_date).replace(tzinfo=timezone.utc)
-            now = datetime.now(tz=timezone.utc)
+            pub = datetime.fromisoformat(published_date.replace("Z", "+00:00"))
+            pub = pub.replace(tzinfo=UTC) if pub.tzinfo is None else pub.astimezone(UTC)
+            now = datetime.now(tz=UTC)
             age_days = max((now - pub).days, 0)
             return math.exp(-_LAMBDA * age_days)
         except ValueError:
@@ -155,8 +157,8 @@ class TrustScorer:
     @staticmethod
     def _cross_source_agreement(
         doc: RetrievedDocument,
-        all_docs: List[RetrievedDocument],
-        stances: Optional[Dict[str, str]],
+        all_docs: list[RetrievedDocument],
+        stances: dict[str, str] | None,
     ) -> float:
         """
         CSA(s) = (# of other sources with the same stance as s) / (# other sources)

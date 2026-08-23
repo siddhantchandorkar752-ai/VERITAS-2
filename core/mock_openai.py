@@ -1,87 +1,177 @@
+"""Deterministic, input-dependent OpenAI test double for offline demonstrations."""
+
+from __future__ import annotations
+
+import hashlib
 import json
-import uuid
+import re
+
 import numpy as np
-from types import SimpleNamespace
+
 
 class MockMessage:
-    def __init__(self, content):
+    def __init__(self, content: str) -> None:
         self.content = content
 
+
 class MockChoice:
-    def __init__(self, content):
+    def __init__(self, content: str) -> None:
         self.message = MockMessage(content)
 
+
 class MockChatCompletion:
-    def __init__(self, content):
+    def __init__(self, content: str) -> None:
         self.choices = [MockChoice(content)]
 
+
 class MockEmbeddingData:
-    def __init__(self, embedding):
+    def __init__(self, embedding: list[float]) -> None:
         self.embedding = embedding
 
+
 class MockEmbeddingResponse:
-    def __init__(self, data):
+    def __init__(self, data: list[MockEmbeddingData]) -> None:
         self.data = data
 
+
+def deterministic_embedding(text: str, dimensions: int = 1536) -> list[float]:
+    """Generate a stable vector for plumbing tests; it has no semantic meaning."""
+
+    digest = hashlib.sha256(text.encode("utf-8")).digest()
+    seed = int.from_bytes(digest[:8], "big", signed=False)
+    generator = np.random.default_rng(seed)
+    vector = generator.standard_normal(dimensions).astype(np.float32)
+    norm = float(np.linalg.norm(vector))
+    if norm:
+        vector /= norm
+    return vector.tolist()
+
+
 class MockEmbeddings:
-    def create(self, model, input):
-        if isinstance(input, str):
-            input = [input]
-        # Return random embeddings of dimension 1536
-        data = [MockEmbeddingData(np.random.rand(1536).tolist()) for _ in input]
-        return MockEmbeddingResponse(data)
+    def create(self, model: str, input: str | list[str]) -> MockEmbeddingResponse:
+        del model
+        texts = [input] if isinstance(input, str) else input
+        return MockEmbeddingResponse(
+            [MockEmbeddingData(deterministic_embedding(text)) for text in texts]
+        )
+
+
+def _last_user_message(messages: list[dict[str, str]]) -> str:
+    for message in reversed(messages):
+        if message.get("role") == "user":
+            return message.get("content", "")
+    return ""
+
+
+def _claim_from_prompt(user_message: str) -> str:
+    markers = (
+        "Extract all atomic claims from the following text:\n\n",
+        "Claim (untrusted quoted data): ",
+        "Original claim: ",
+        "Claim: ",
+    )
+    for marker in markers:
+        if marker in user_message:
+            value = user_message.split(marker, 1)[1]
+            return value.split("\n\n", 1)[0].strip()
+    return user_message.strip()
+
 
 class MockChat:
-    def __init__(self):
+    def __init__(self) -> None:
         self.completions = self
 
-    def create(self, model, messages, **kwargs):
-        system_prompt = messages[0]["content"] if messages else ""
-        
-        # Determine what kind of response is needed based on prompt keywords
-        if "claim extraction engine" in system_prompt or "Extract factual" in system_prompt:
-            content = json.dumps([{
-                "claim_text": "Is it universally illegal? Did the UN create such law? Does it override national laws? Is there mandatory imprisonment?",
-                "entities": ["UN Law", "Universal Legality", "National Override", "Mandatory Imprisonment"],
-                "temporal_scope": {"start": None, "end": None, "is_current": True},
-                "claim_type": "factual"
-            }])
-        elif "PRO AGENT" in system_prompt or "Agent B" in system_prompt:
-            content = json.dumps({
-                "stance": "supports",
-                "key_points": ["Evidence suggests some international agreements align with this concept.", "Several legal experts cite alignment with the UN framework."],
-                "evidence_references": [{"doc_id": "mock_doc_1", "url": "https://mocksource.com/article1", "excerpt": "International law frameworks loosely support the underlying principles."}],
-                "confidence": 0.88,
-                "reasoning": "The evidence supports the premise. However, there is no universal scientific or legal consensus, only institutional recommendations."
-            })
-        elif "CON AGENT" in system_prompt or "Agent A" in system_prompt:
-            content = json.dumps({
-                "stance": "contradicts",
-                "key_points": ["National sovereignty supersedes the UN framework in 80% of jurisdictions.", "No mandatory imprisonment clause exists in the treaties."],
-                "evidence_references": [{"doc_id": "mock_doc_2", "url": "https://mocksource.com/article2", "excerpt": "Treaties lack enforcement mechanisms and do not override domestic laws."}],
-                "confidence": 0.65,
-                "reasoning": "The claim fails the sovereignty test. Tier 2 data directly contradicts the premise of universal illegality."
-            })
-        elif "ADVERSARIAL AGENT" in system_prompt or "Agent C" in system_prompt:
-            content = json.dumps({
-                "stance": "flags_weakness",
-                "key_points": ["Detected conflation between 'resolutions' and 'binding law'.", "False authority fallacy in interpreting UN guidelines as mandatory."],
-                "evidence_references": [{"doc_id": "mock_doc_3", "url": "https://mocksource.com/article3", "excerpt": "The resolution is non-binding and acts only as a soft-power guideline."}],
-                "confidence": 0.72,
-                "reasoning": "Rigorous adversarial analysis reveals severe semantic drift. The original claim confuses non-binding UN resolutions with enforceable international law."
-            })
-        elif "fact-correction engine" in system_prompt or "CORRECTED CLAIM" in system_prompt:
-            content = json.dumps({"corrected_text": "The UN has issued non-binding resolutions regarding this topic, but it does not constitute universally enforceable international law, nor does it mandate imprisonment."})
-        elif "synthesising fact-verification" in system_prompt or "Chief Judge" in system_prompt:
-            content = "UNCERTAINTY DECOMPOSITION: Epistemic uncertainty driven by jurisdictional variance; Aleatoric uncertainty driven by subjective enforcement. PROBABILISTIC AGGREGATION: The final mathematical calculation inherently balances the supportive frameworks with the non-binding reality."
+    def create(
+        self,
+        model: str,
+        messages: list[dict[str, str]],
+        **kwargs,
+    ) -> MockChatCompletion:
+        del model, kwargs
+        system_prompt = messages[0].get("content", "") if messages else ""
+        user_message = _last_user_message(messages)
+        claim = _claim_from_prompt(user_message)
+
+        if "claim extraction engine" in system_prompt:
+            entities = list(dict.fromkeys(re.findall(r"\b[A-Z][\w-]*\b", claim)))[:8]
+            content = json.dumps(
+                {
+                    "claims": [
+                        {
+                            "claim_text": claim,
+                            "entities": entities,
+                            "temporal_scope": {
+                                "start": None,
+                                "end": None,
+                                "is_current": False,
+                            },
+                            "claim_type": "factual",
+                        }
+                    ]
+                }
+            )
+        elif "PRO AGENT" in system_prompt:
+            content = self._agent_response(
+                "supports",
+                "mock_doc_1",
+                "Synthetic supporting scenario",
+                claim,
+            )
+        elif "CON AGENT" in system_prompt:
+            content = self._agent_response(
+                "contradicts",
+                "mock_doc_2",
+                "Synthetic counter-scenario",
+                claim,
+            )
+        elif "ADVERSARIAL AGENT" in system_prompt:
+            content = self._agent_response(
+                "flags_weakness",
+                "mock_doc_3",
+                "Synthetic limitation scenario",
+                claim,
+            )
+        elif "VERITAS correction-candidate component" in system_prompt:
+            content = "[UNVERIFIABLE — DEMO MODE]"
+        elif "VERITAS evidence-summary component" in system_prompt:
+            content = (
+                "Synthetic demonstration only. The displayed aggregation is based on "
+                f"fabricated scenarios for: {claim[:240]}"
+            )
         else:
-            content = json.dumps({"result": "mock_response"})
+            content = json.dumps({"result": "demo_response"})
 
         return MockChatCompletion(content)
 
+    @staticmethod
+    def _agent_response(
+        stance: str,
+        doc_id: str,
+        label: str,
+        claim: str,
+    ) -> str:
+        return json.dumps(
+            {
+                "stance": stance,
+                "key_points": [f"{label} for the submitted claim."],
+                "evidence_references": [
+                    {
+                        "doc_id": doc_id,
+                        "url": f"https://demo.invalid/{doc_id}",
+                        "excerpt": f"{label}: {claim[:180]}",
+                    }
+                ],
+                "confidence": 0.5,
+                "reasoning": (
+                    f"{label} generated to exercise the {stance} pipeline path. "
+                    "It is not external evidence."
+                ),
+            }
+        )
+
+
 class MockOpenAIClient:
-    def __init__(self, api_key=None):
+    def __init__(self, api_key: str | None = None) -> None:
         self.api_key = api_key
         self.chat = MockChat()
         self.embeddings = MockEmbeddings()
-
